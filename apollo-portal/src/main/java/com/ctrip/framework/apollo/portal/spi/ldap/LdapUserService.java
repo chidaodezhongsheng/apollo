@@ -259,12 +259,11 @@ public class LdapUserService implements UserService {
         return -1;
       })), ArrayList::new));
     } else {
-      ContainerCriteria criteria = ldapQueryCriteria();
       if (!Strings.isNullOrEmpty(keyword)) {
-        criteria.and(query().where(loginIdAttrName).like(keyword + "*").or(userDisplayNameAttrName)
-            .like(keyword + "*"));
+        ContainerCriteria criteria = query().searchScope(SearchScope.SUBTREE).where(loginIdAttrName).
+                like(keyword + "*").or(userDisplayNameAttrName).like(keyword + "*");
+        users = ldapTemplate.search(criteria, ldapUserInfoMapper);
       }
-      users = ldapTemplate.search(criteria, ldapUserInfoMapper);
       return users;
     }
   }
@@ -280,7 +279,7 @@ public class LdapUserService implements UserService {
       return null;
     } else {
       return ldapTemplate
-          .searchForObject(ldapQueryCriteria().and(loginIdAttrName).is(userId), ldapUserInfoMapper);
+          .searchForObject(query().searchScope(SearchScope.SUBTREE).where(loginIdAttrName).is(userId), ldapUserInfoMapper);
 
     }
   }
@@ -297,9 +296,9 @@ public class LdapUserService implements UserService {
         userList.addAll(userListByGroup);
         return userList;
       } else {
-        ContainerCriteria criteria = query().where(loginIdAttrName).is(userIds.get(0));
+        ContainerCriteria criteria = query().searchScope(SearchScope.SUBTREE).where(loginIdAttrName).is(userIds.get(0));
         userIds.stream().skip(1).forEach(userId -> criteria.or(loginIdAttrName).is(userId));
-        return ldapTemplate.search(ldapQueryCriteria().and(criteria), ldapUserInfoMapper);
+        return ldapTemplate.search(criteria, ldapUserInfoMapper);
       }
     }
   }
